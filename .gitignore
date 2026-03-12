@@ -1,0 +1,6 @@
+# Vitural Environment File
+.venv/
+# Pycharm Configuration File
+.idea/
+# The Environment File
+.env
