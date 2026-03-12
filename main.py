@@ -9,6 +9,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
 # CORS Configuration: Allow cross-origin requests
 app.add_middleware(
     CORSMiddleware,
