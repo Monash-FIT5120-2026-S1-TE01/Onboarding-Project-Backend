@@ -1,3 +1,7 @@
+"""
+The main entrance of the app, transform web request to program logic
+"""
+
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
