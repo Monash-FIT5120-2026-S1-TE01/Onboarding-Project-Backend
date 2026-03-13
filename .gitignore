@@ -6,3 +6,5 @@
 .env
 # Test frontend
 test.html
+# Python cache
+__pycache__/
