@@ -1,0 +1,92 @@
+"""
+Geocoding API client for city <-> coordinates conversion.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
+import httpx
+from pydantic import BaseModel, Field
+
+
+class CityQuery(BaseModel):
+    city: str = Field(min_length=1, max_length=100)
+
+
+class CoordinatesQuery(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class GeocodingClient:
+    """
+    Forward and reverse geocoding based on Nominatim endpoints.
+    """
+
+    SEARCH_URL = "https://nominatim.openstreetmap.org/search"
+    REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
+
+    def __init__(self, timeout: float = 12.0) -> None:
+        self.timeout = timeout
+        self.headers = {
+            "User-Agent": "uv-level-monitor/1.0 (student project)",
+            "Accept": "application/json",
+        }
+
+    async def city_to_coords(self, city: str) -> Dict[str, Any]:
+        query = CityQuery(city=city.strip())
+
+        params = {
+            "q": query.city,
+            "format": "jsonv2",
+            "limit": 1,
+        }
+        async with httpx.AsyncClient(timeout=self.timeout, headers=self.headers) as client:
+            resp = await client.get(self.SEARCH_URL, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        if not data:
+            raise ValueError(f"City not found: {query.city}")
+
+        best = data[0]
+        return {
+            "city": query.city,
+            "latitude": float(best["lat"]),
+            "longitude": float(best["lon"]),
+            "display_name": best.get("display_name"),
+        }
+
+    async def coords_to_city(self, latitude: float, longitude: float) -> Dict[str, Any]:
+        query = CoordinatesQuery(latitude=latitude, longitude=longitude)
+
+        params = {
+            "lat": query.latitude,
+            "lon": query.longitude,
+            "format": "jsonv2",
+            "zoom": 10,
+        }
+        async with httpx.AsyncClient(timeout=self.timeout, headers=self.headers) as client:
+            resp = await client.get(self.REVERSE_URL, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        address = data.get("address", {})
+        city_name: Optional[str] = (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or address.get("county")
+        )
+
+        if not city_name:
+            raise ValueError("No city-like location found for the coordinates")
+
+        return {
+            "latitude": query.latitude,
+            "longitude": query.longitude,
+            "city": city_name,
+            "country": address.get("country"),
+            "display_name": data.get("display_name"),
+        }
