@@ -130,6 +130,35 @@ class OpenMeteoAPIResponseParams(BaseModel):
 
         return self
 
+# -------------------------------------------------------------------
+# City location
+
+class CityRequestParams(BaseModel):
+    city: str = "Melbourne"
+    format: str = "jsonv2"
+    limit: int = 1
+
+class CityResponseParams(BaseModel):
+    city: str
+    lat: float = Field(..., ge=-90, le=90)
+    lon: float = Field(..., ge=-180, le=180)
+    display_name: str
+
+class CoordRequestParams(BaseModel):
+    lat: float = Field(default=-37.8142454, ge=-90, le=90)
+    lon: float = Field(default=144.9631732, ge=-180, le=180)
+    format: str = "jsonv2"
+    zoom: int = 10
+
+class CoordResponseParams(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lon: float = Field(ge=-180, le=180)
+    city: str
+    country: str
+    display_name: str
+
+# ===================================================================
+
 class UVLevelQuery(BaseModel):
     city: str
     timestamp: int

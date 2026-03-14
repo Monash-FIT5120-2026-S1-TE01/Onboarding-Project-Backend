@@ -10,11 +10,29 @@ import asyncpg
 import uvicorn
 import logging
 
-from fastapi import FastAPI, Depends
+from fastapi import (
+    FastAPI,
+    Depends
+)
 from fastapi.middleware.cors import CORSMiddleware
-from uv_level_monitor.core.utils import UsageCalculator, ClothRecommender
-from uv_level_monitor.core.models import ClothRecommendQuery, UVUsageParams, OpenMeteoAPIResponseParams, OpenMeteoAPIRequestParams
-from uv_level_monitor.core.weather_api import OpenMeteoClient
+from uv_level_monitor.core.utils import (
+    UsageCalculator,
+    ClothRecommender
+)
+from uv_level_monitor.core.models import (
+    ClothRecommendQuery,
+    UVUsageParams,
+    OpenMeteoAPIResponseParams,
+    OpenMeteoAPIRequestParams,
+    CityRequestParams,
+    CityResponseParams,
+    CoordRequestParams,
+    CoordResponseParams
+)
+from uv_level_monitor.core.external_api import (
+    OpenMeteoClient,
+    GeocodingClient
+)
 from uv_level_monitor.config.config import settings
 from typing import Dict
 from functools import lru_cache
@@ -93,6 +111,13 @@ def get_weather_api() -> OpenMeteoClient:
     Insert weather api instance into memory
     """
     return OpenMeteoClient()
+
+@lru_cache
+def get_city_location_api() -> GeocodingClient:
+    """
+    Insert location instance into memory
+    """
+    return GeocodingClient()
 
 async def get_db_conn():
     """
@@ -176,6 +201,28 @@ async def get_uv_level(
     """
     uv_level = await api_client.fetch_uv_weather(query=conditions)
     return uv_level
+
+@app.post("/func/get-city-name")
+async def get_city_name(
+        conditions: CoordRequestParams,
+        api_client: GeocodingClient = Depends(get_city_location_api)
+) -> CoordResponseParams:
+    """
+    Get the name of the city
+    """
+    city_name = await api_client.coords_to_city(query=conditions)
+    return city_name
+
+@app.post("/func/get-coordination")
+async def get_coordination(
+        conditions: CityRequestParams,
+        api_client: GeocodingClient = Depends(get_city_location_api)
+) -> CityResponseParams:
+    """
+    Get the name of the city
+    """
+    coordination = await api_client.city_to_coords(query=conditions)
+    return coordination
 
 if __name__ == "__main__":
     uvicorn.run(app)
