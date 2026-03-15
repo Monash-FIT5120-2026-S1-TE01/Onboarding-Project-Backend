@@ -13,4 +13,4 @@ from .model_api_client import (
     WeatherGroup
 )
 from .model_query_processor import ClothRecommendQuery
-from .model_calculator import SafeTimeCalculatorRequestParams
+from .model_calculator import SafeTimeCalculatorRequestParams, AreaPerBodyPart, SunscreenUsageCalculatorRequestParams

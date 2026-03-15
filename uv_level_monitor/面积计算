@@ -1,0 +1,15 @@
+1. 人体面积：
+    1. 基于身高与体重
+    2. 基于 Mosteller 计算
+    3. 基于 https://ctrlcalculator.com/everyday-life/sunscreen-calculator/ 估算身高体重对应关系
+2. 穿衣占比：医学上评估烧伤面积时九分法
+    1. 头部和颈部：约 9%
+    2. 是否是短袖：双上肢（手臂）：约 18%（单只手臂约 9%）
+    3. 是否是长裤双下肢（腿部）：约 36%（单条腿约 18%）
+3. Body Surface Area (in cm²) × 2 mg/cm²
+4. 字段名：usage
+5. 与返回一起返回
+6. daily 估算也用这个
+7. 无就返回 0
+8. 细分：teaspon
+9. 身体：总量
