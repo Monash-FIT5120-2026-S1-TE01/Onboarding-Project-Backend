@@ -18,7 +18,7 @@ def get_temp_level_4cloth(temp: float) -> str:
 
 SELECT sugg_text 
 FROM cloth_sugg
-WHERE uv_level = :uv_level
-  AND temp_level = :temp_level
-  AND is_raining = :is_raining
+WHERE uv_level = $1
+  AND temp_level = $2
+  AND is_raining = $3
 LIMIT 1;

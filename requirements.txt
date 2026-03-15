@@ -6,3 +6,4 @@ psycopg2==2.9.11
 asyncpg==0.31.0
 pydantic_settings==2.13.1
 httpx==0.28.1
+tzdata==2025.3 # For cross platform getting avaliable time zone

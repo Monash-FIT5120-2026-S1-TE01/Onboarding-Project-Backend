@@ -6,11 +6,11 @@ Gateway to external api
 
 import httpx
 
-from uv_level_monitor.core.models import (
-    CityRequestParams,
-    CityResponseParams,
-    CoordRequestParams,
-    CoordResponseParams,
+from uv_level_monitor.core.models.model_api_client import (
+    CityToCoordRequestParams,
+    CityToCoordResponseParams,
+    CoordToCityRequestParams,
+    CoordToCityResponseParams,
     OpenMeteoAPIRequestParams,
     OpenMeteoAPIResponseParams
 )
@@ -36,7 +36,7 @@ class GeocodingClient:
             "Accept": "application/json",
         }
 
-    async def city_to_coords(self, query: CityRequestParams) -> CityResponseParams:
+    async def city_to_coords(self, query: CityToCoordRequestParams) -> CityToCoordResponseParams:
         """
         Transform city name to coordination
         """
@@ -54,7 +54,7 @@ class GeocodingClient:
 
             best = data[0]
 
-            response = CityResponseParams(city=query.city, **best)
+            response = CityToCoordResponseParams(city=query.city, **best)
 
         except httpx.HTTPError as exc:
             # Connection error
@@ -70,7 +70,7 @@ class GeocodingClient:
             )
         return response
 
-    async def coords_to_city(self, query: CoordRequestParams) -> CoordResponseParams:
+    async def coords_to_city(self, query: CoordToCityRequestParams) -> CoordToCityResponseParams:
         """
         Transform coordination to city name
         """
@@ -94,7 +94,7 @@ class GeocodingClient:
             if not city_name:
                 raise ValueError("[Upstream API Error] No city-like location found for the coordinates")
 
-            response = CoordResponseParams(
+            response = CoordToCityResponseParams(
                 lat = query.lat,
                 lon = query.lon,
                 city = city_name,
@@ -125,7 +125,7 @@ class OpenMeteoClient:
         self._open_meteo_url = settings.open_meteo_url
 
     async def fetch_uv_weather(self, query: OpenMeteoAPIRequestParams) -> OpenMeteoAPIResponseParams:
-        params = query.model_dump(include={"latitude", "longitude", "timezone", "forecast_hours", "hourly"})
+        params = query.model_dump(include={"latitude", "longitude", "timezone", "forecast_hours", "past_hours", "hourly"})
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -135,10 +135,15 @@ class OpenMeteoClient:
 
             response = OpenMeteoAPIResponseParams(**data)
 
-            target_set  = {str(k) for k in query.hourly_params}
-            compare_set = set(response.hourly.keys())
+
+            # Check the length of the record
+            times = response.hourly.get("time")
+            if len(times) != query.past_hours + query.forecast_hours:
+                raise ValueError(f"[Upstream API Error] Length of response mismatching the total request hours")
 
             # Find the missing keys
+            target_set  = {str(k) for k in query.hourly_params}
+            compare_set = set(response.hourly.keys())
             missing_keys = target_set - compare_set
 
             # Checking the missing keys
