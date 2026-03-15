@@ -162,7 +162,7 @@ class BackendForFrontend:
 
     async def __cal_safe_time(
             self,
-            spf: Literal[30, 50],
+            spf: Literal[0, 30, 50],
             uv_index: float,
             sun_screen_efficiency: float,
             skin_type: Literal[1,2,3,4,5,6]
@@ -203,13 +203,17 @@ class BackendForFrontend:
 
     async def __cal_sunscreen_usage(
             self,
+            spf: Literal[0, 30, 50],
             cloth_sugg: str,
             height: int,
             weight: int
-    ) -> Dict[str, Union[float, str]]:
+    ) -> Dict[str, Union[Dict[str, float], str]]:
         """
         Calculate the sunscreen usage
         """
+        if spf == 0:
+            return {"usage":{"face_neck": 0., "arm_leg": 0., "total": 0.}}
+
         response = {}
 
         query = SunscreenUsageCalculatorRequestParams(
@@ -234,7 +238,7 @@ class BackendForFrontend:
             height = query.height
 
         usage = self._usage_calculator.cal(cloth_sugg=query.cloth_sugg, weight=weight, height=height)
-        if not usage:
+        if usage is None:
             logger.error("[BFF Error] Failed in calculating the sunscreen usage")
             raise HTTPException(status_code=500, detail="Failed in calculating the sunscreen usage")
         response.update({"usage": usage})
@@ -291,6 +295,7 @@ class BackendForFrontend:
 
         # Get the sunscreen usage
         usage = await self.__cal_sunscreen_usage(
+            spf = spf["spf"],
             cloth_sugg = cloth_sugg.get("sugg_cloth", ""),
             weight = query.weight,
             height = query.height
