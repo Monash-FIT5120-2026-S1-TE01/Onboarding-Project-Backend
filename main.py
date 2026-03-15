@@ -117,7 +117,9 @@ async def refresh_status(
     """
     Update the status depending on the choice
     """
+    logger.info("[Backend Status] Getting the request")
     response = await backend_for_frontend.fetch_curr_status(query=query, db_conn=db_conn)
+    logger.info("[Backend Status] Sending Message Successful")
     return response
 
 if __name__ == "__main__":
