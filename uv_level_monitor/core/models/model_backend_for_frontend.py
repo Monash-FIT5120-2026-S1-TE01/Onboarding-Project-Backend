@@ -20,6 +20,14 @@ class BackendForFrontendRequestParams(BaseModel):
         default = 3,
         description = "The type for your skin"
     )
+    height: int = Field(
+        default = 175,
+        description = "Height in unit of cm"
+    )
+    weight: int = Field(
+        default = 82,
+        description = "Weight in unit of kg"
+    )
 
 class BackendForFrontendResponseParams(BaseModel):
     city: str
@@ -29,7 +37,8 @@ class BackendForFrontendResponseParams(BaseModel):
     forecast_uv_index_time: Dict[str, Union[List[float], List[str]]]
     weather_label: str
     temperature: float
-    spf: Literal[30, 50]
+    spf: Literal[0, 30, 50]
     sugg_cloth: str
     safe_time: int
+    usage: Dict[str, float]
     warnings: Dict[str, str] = Field(default_factory=dict) # Warning pools for function downgrade

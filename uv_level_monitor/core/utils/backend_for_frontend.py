@@ -1,6 +1,6 @@
 from typing import Dict, Union, Literal, List
 from fastapi import HTTPException, status
-from .calculator import SafeTimeCalculator, SPFCalculator
+from .calculator import SafeTimeCalculator, SPFCalculator, SunscreenUsageCalculator
 from .api_client import OpenMeteoClient, GeocodingClient
 from .query_processor import ClothRecommender
 from uv_level_monitor.core.models import *
@@ -20,10 +20,14 @@ class BackendForFrontend:
         self._coord_api = GeocodingClient()
         self._spf_calculator = SPFCalculator()
         self._safe_time_calculator = SafeTimeCalculator()
+        self._usage_calculator = SunscreenUsageCalculator()
         self._cloth_recommender = ClothRecommender()
 
         self._default_city = "melbourne"
         self._default_timezone = "Australia/Sydney"
+
+        self._default_weight = 82
+        self._default_height = 175
 
     async def __fetch_coord(
             self,
@@ -146,12 +150,12 @@ class BackendForFrontend:
     async def __cal_spf(
             self,
             uv_index: float
-    ) -> Dict[str, Literal[30, 50]]:
+    ) -> Dict[str, Literal[0, 30, 50]]:
         """
         Judge the level of SPF based on uv index
         """
         spf = await self._spf_calculator.cal(uv_index=uv_index)
-        if not spf:
+        if spf is None:
             logger.error("[BFF Error] SPF calculation returned empty")
             raise HTTPException(status_code=500, detail="Failed to calculate the SPF")
         return {"spf": spf}
@@ -196,6 +200,46 @@ class BackendForFrontend:
             logger.error("[BFF Error] Failed to get the cloth suggestion")
             raise HTTPException(status_code=500, detail="Failed to get the cloth suggestion")
         return {"sugg_cloth": sugg_cloth}
+
+    async def __cal_sunscreen_usage(
+            self,
+            cloth_sugg: str,
+            height: int,
+            weight: int
+    ) -> Dict[str, Union[float, str]]:
+        """
+        Calculate the sunscreen usage
+        """
+        response = {}
+
+        query = SunscreenUsageCalculatorRequestParams(
+            cloth_sugg = cloth_sugg,
+            weight = weight,
+            height = height
+        )
+        if query.weight <= 0:
+            msg = f"[BFF Warning] Invalid weight: {query.weight}, using default weight: {self._default_weight}"
+            logger.warning(msg)
+            response.update({"warning01": msg})
+            weight = self._default_weight
+        else:
+            weight = query.weight
+
+        if query.height <= 0:
+            msg = f"[BFF Warning] Invalid height: {query.height}, using default height: {self._default_height}"
+            logger.warning(msg)
+            response.update({"warning02": msg})
+            height = self._default_height
+        else:
+            height = query.height
+
+        usage = self._usage_calculator.cal(cloth_sugg=query.cloth_sugg, weight=weight, height=height)
+        if not usage:
+            logger.error("[BFF Error] Failed in calculating the sunscreen usage")
+            raise HTTPException(status_code=500, detail="Failed in calculating the sunscreen usage")
+        response.update({"usage": usage})
+
+        return response
 
     async def fetch_curr_status(
             self,
@@ -244,6 +288,16 @@ class BackendForFrontend:
             db_conn = db_conn
         )
         response_dict.update(cloth_sugg)
+
+        # Get the sunscreen usage
+        usage = await self.__cal_sunscreen_usage(
+            cloth_sugg = cloth_sugg.get("sugg_cloth", ""),
+            weight = query.weight,
+            height = query.height
+        )
+        if usage.get("warning01"): warnings_pool.update({"weight": usage.pop("warning01")})
+        if usage.get("warning02"): warnings_pool.update({"height": usage.pop("warning02")})
+        response_dict.update(usage)
 
         if warnings_pool: response_dict.update({"warnings": warnings_pool})
 
