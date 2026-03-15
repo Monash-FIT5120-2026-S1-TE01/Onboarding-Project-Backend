@@ -90,8 +90,8 @@ class OpenMeteoAPIRequestParams(BaseModel):
         description = "List of weather variables to retrieve"
     )
     timezone: str = "Australia/Sydney"
-    forecast_hours: int = Field(default=12, ge=1)
-    past_hours: int = Field(default=12, ge=1)
+    forecast_hours: int = Field(default=12, ge=0)
+    past_hours: int = Field(default=12, ge=0)
 
     @computed_field
     @property
