@@ -104,7 +104,7 @@ class OpenMeteoAPIRequestParams(BaseModel):
 class OpenMeteoAPIResponseParams(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
-    timezone: Literal["Australia/Sydney"] = "Australia/Sydney"
+    timezone: str = "Australia/Sydney"
     hourly: Dict[str, List[Union[str, float, int]]]
 
     @model_validator(mode="after")
