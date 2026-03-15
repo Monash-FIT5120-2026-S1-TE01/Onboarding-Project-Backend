@@ -31,4 +31,5 @@ class BackendForFrontendResponseParams(BaseModel):
     temperature: float
     spf: Literal[30, 50]
     sugg_cloth: str
+    safe_time: int
     warnings: Dict[str, str] = Field(default_factory=dict) # Warning pools for function downgrade
