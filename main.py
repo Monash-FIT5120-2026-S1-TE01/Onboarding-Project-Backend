@@ -101,21 +101,6 @@ async def root():
         "python_version": "3.12"
     }
 
-@uv_level_app.get("/test-env")
-async def test_environment():
-    """
-    Verify if Azure is correctly injecting our Database environment variables.
-    """
-    db_host = os.getenv("DB_HOST", "NOT_FOUND")
-    db_user = os.getenv("DB_USER", "NOT_FOUND")
-
-    return {
-        "db_host": db_host,
-        "db_user": db_user,
-        "environment": "Production/Azure",
-        "tip": "If host shows Postgres URL, the config is done."
-    }
-
 @uv_level_app.get("/health")
 async def health_check():
     """
