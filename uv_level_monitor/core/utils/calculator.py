@@ -1,6 +1,7 @@
 import re
+import math
 import asyncio
-from typing import Literal, Dict
+from typing import Literal, Dict, Union
 from uv_level_monitor.core.models import AreaPerBodyPart
 
 class SafeTimeCalculator:
@@ -29,7 +30,7 @@ class SafeTimeCalculator:
 class SPFCalculator:
     @staticmethod
     async def cal(uv_index: float) -> Literal[0, 30, 50]:
-        if uv_index < 2: return 0
+        if uv_index < 1: return 0
         if uv_index < 3: return 30
         return 50
 
@@ -62,6 +63,16 @@ class SunscreenUsageCalculator:
 
         return cover_area_ml
 
+    @staticmethod
+    def ml_to_teaspoon(
+            usage_ml: float
+    ) -> int:
+        """
+        Convert ml to teaspoon
+        """
+        return math.ceil(usage_ml / 5) # 1 teaspoon approximate to 5ml
+
+
     def get_cloth_type(
             self,
             cloth_sugg: str
@@ -85,7 +96,7 @@ class SunscreenUsageCalculator:
             cloth_sugg: str,
             height: int,
             weight: int
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Dict[str, Union[float, int]]]:
         """
         Calculate the sunscreen usage based on equation
         """
@@ -99,17 +110,33 @@ class SunscreenUsageCalculator:
         total_usage = self.usage_equation(cover_area=area)
 
         # Calculate partial usage
-        face_neck = round(float(AreaPerBodyPart.face_neck) * total_usage / 100, 2)
+        face_neck = round(float(AreaPerBodyPart.face_neck) * total_usage / 100)
         arm_leg = 0
         if condition.get("need_arm", True):
-            arm = float(AreaPerBodyPart.arms) * total_usage / 100
+            arm = float(AreaPerBodyPart.arms) * total_usage / 100 # ml
             arm_leg += arm
         if condition.get("need_leg", True):
-            leg = float(AreaPerBodyPart.legs) * total_usage / 100
+            leg = float(AreaPerBodyPart.legs) * total_usage / 100 # ml
             arm_leg += leg
-        arm_leg = round(arm_leg, 2)
+        arm_leg = round(arm_leg)
 
-        return {"face_neck": face_neck, "arm_leg": arm_leg, "total": face_neck + arm_leg}
+        arm_leg_teaspoon = self.ml_to_teaspoon(usage_ml=arm_leg)
+        face_neck_teaspoon = self.ml_to_teaspoon(usage_ml=face_neck)
+
+        return {
+            "face_neck": {
+                "teaspoon": face_neck_teaspoon,
+                "ml": face_neck
+            },
+            "arm_leg": {
+                "teaspoon": arm_leg_teaspoon,
+                "ml": arm_leg
+            },
+            "total": {
+                "teaspoon": arm_leg_teaspoon + face_neck_teaspoon,
+                "ml": face_neck + arm_leg
+            }
+        }
 
 if __name__ == "__main__":
     pass
