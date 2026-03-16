@@ -109,6 +109,7 @@ class BackendForFrontend:
         # Build response
         hourly = uv_weather.hourly
         uv_index = hourly.get("uv_index")
+        uv_index = [round(uv) for uv in uv_index]
         time = hourly.get("time")
         weather_code = int(hourly.get("weather_code")[past_hours])
 
