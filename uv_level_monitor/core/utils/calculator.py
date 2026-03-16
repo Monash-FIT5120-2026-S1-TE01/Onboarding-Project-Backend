@@ -22,8 +22,8 @@ class SafeTimeCalculator:
             epsilon: float = 1e-06
     ) -> float:
         med = self.SKIN_MED_MAPPING.get(skin_type, 3)
-        if spf == 0: safe_time = int(2 * med * sun_screen_efficiency / (3 * (uv_index + epsilon)))
-        else: safe_time = int(2 * med * spf * sun_screen_efficiency / (3 * (uv_index + epsilon)))
+        if spf == 0: safe_time = round(2 * med * sun_screen_efficiency / (3 * (uv_index + epsilon)))
+        else: safe_time = round(2 * med * spf * sun_screen_efficiency / (3 * (uv_index + epsilon)))
         return safe_time
 
 class SPFCalculator:
