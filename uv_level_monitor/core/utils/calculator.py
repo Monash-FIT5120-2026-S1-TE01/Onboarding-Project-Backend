@@ -1,4 +1,5 @@
 import re
+import math
 import asyncio
 from typing import Literal, Dict, Union
 from uv_level_monitor.core.models import AreaPerBodyPart
@@ -69,7 +70,7 @@ class SunscreenUsageCalculator:
         """
         Convert ml to teaspoon
         """
-        return round(usage_ml / 5) # 1 teaspoon approximate to 5ml
+        return math.ceil(usage_ml / 5) # 1 teaspoon approximate to 5ml
 
 
     def get_cloth_type(
@@ -109,7 +110,7 @@ class SunscreenUsageCalculator:
         total_usage = self.usage_equation(cover_area=area)
 
         # Calculate partial usage
-        face_neck = round(float(AreaPerBodyPart.face_neck) * total_usage / 100, 2)
+        face_neck = round(float(AreaPerBodyPart.face_neck) * total_usage / 100)
         arm_leg = 0
         if condition.get("need_arm", True):
             arm = float(AreaPerBodyPart.arms) * total_usage / 100 # ml
@@ -117,7 +118,7 @@ class SunscreenUsageCalculator:
         if condition.get("need_leg", True):
             leg = float(AreaPerBodyPart.legs) * total_usage / 100 # ml
             arm_leg += leg
-        arm_leg = round(arm_leg, 2)
+        arm_leg = round(arm_leg)
 
         arm_leg_teaspoon = self.ml_to_teaspoon(usage_ml=arm_leg)
         face_neck_teaspoon = self.ml_to_teaspoon(usage_ml=face_neck)
