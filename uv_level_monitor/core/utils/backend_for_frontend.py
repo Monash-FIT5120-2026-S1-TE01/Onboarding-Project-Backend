@@ -271,7 +271,7 @@ class BackendForFrontend:
         response_dict.update(uv_weather)
 
         # Calculate the SPF
-        curr_uv_index = uv_weather["current_uv_index_time"]["uv_index"]
+        curr_uv_index: float = uv_weather["current_uv_index_time"]["uv_index"]
         spf = await self.__cal_spf(uv_index=curr_uv_index)
         response_dict.update(spf)
 
