@@ -208,12 +208,27 @@ class BackendForFrontend:
             cloth_sugg: str,
             height: int,
             weight: int
-    ) -> Dict[str, Union[Dict[str, float], str]]:
+    ) -> Dict[str, Union[Dict[str, Dict[str, Union[float, int]]], str]]:
         """
         Calculate the sunscreen usage
         """
         if spf == 0:
-            return {"usage":{"face_neck": 0., "arm_leg": 0., "total": 0.}}
+            return {
+                "usage": {
+                    "face_neck": {
+                        "teaspoon": 0.,
+                        "ml": 0
+                    },
+                    "arm_leg": {
+                        "teaspoon": 0.,
+                        "ml": 0
+                    },
+                    "total": {
+                        "teaspoon": 0.,
+                        "ml": 0
+                    }
+                }
+            }
 
         response = {}
 

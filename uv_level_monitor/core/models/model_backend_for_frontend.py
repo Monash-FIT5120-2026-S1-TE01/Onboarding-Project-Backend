@@ -40,5 +40,5 @@ class BackendForFrontendResponseParams(BaseModel):
     spf: Literal[0, 30, 50]
     sugg_cloth: str
     safe_time: int
-    usage: Dict[str, float]
+    usage: Dict[str, Dict[str, Union[float, int]]]
     warnings: Dict[str, str] = Field(default_factory=dict) # Warning pools for function downgrade
