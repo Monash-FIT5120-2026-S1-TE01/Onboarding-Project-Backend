@@ -11,7 +11,7 @@ class BackendForFrontendRequestParams(BaseModel):
         description = "The time zone in INNA format."
     )
     sun_screen_efficiency: float = Field(
-        default = 0.5,
+        default = 0.3,
         ge = 0.1,
         le = 1.0,
         description = "The efficiency of the sunscreen"
